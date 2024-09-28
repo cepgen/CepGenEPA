@@ -2,8 +2,8 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "ggMatrixElements/helicity_amplitudes.h"
-#include "ggMatrixElements/matrix_elements.h"
+#include "ggMatrixElements/HelicityAmplitudes.h"
+#include "ggMatrixElements/MatrixElements.h"
 
 namespace eft_aaaa {
   // Computes the  squared matrix element and the SM interference from free zeta_1, zeta_2

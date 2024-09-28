@@ -2,11 +2,12 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "ggMatrixElements/helicity_amplitudes.h"
-#include "ggMatrixElements/matrix_elements.h"
+#include "ggMatrixElements/Constants.h"
+#include "ggMatrixElements/HelicityAmplitudes.h"
+#include "ggMatrixElements/MatrixElements.h"
 
 namespace sm_aaaa {
-  const double prefac_W = 1. / (4 * mW * mW);
+  const double prefac_W = 1. / (4 * constants::mW * constants::mW);
   const std::array<double, 9> SM_weight = {1, 1, 1, 16. / 27., 16. / 27., 16. / 27., 1. / 27., 1. / 27., 1. / 27.};
   const std::array<double, 9> SM_masses = {0.5e-3, 0.105, 1.77, 0.0023, 1.28, 173.07, 0.0048, 0.095, 4.18};
 
@@ -51,8 +52,8 @@ namespace sm_aaaa {
     *re += d_re;
     *im += d_im;
 
-    *re *= 8 * alpha_em * alpha_em;
-    *im *= 8 * alpha_em * alpha_em;
+    *re *= 8 * constants::alpha_em * constants::alpha_em;
+    *im *= 8 * constants::alpha_em * constants::alpha_em;
 
     // the factor of 8 is needed because of the conventions in
     // Costantini, DeTollis, Pistoni

@@ -1,8 +1,5 @@
-#ifndef ggMatrixElements_matrix_elements_h
-#define ggMatrixElements_matrix_elements_h
-
-static constexpr double alpha_em = 1. / 137.036;  // EM coupling at zero momentum (on shell scheme)
-static constexpr double mW = 80.385;              // W mass in GeV
+#ifndef ggMatrixElements_MatrixElements_h
+#define ggMatrixElements_MatrixElements_h
 
 namespace sm_aaaa {
   void me_SM(void (*me)(double, double, double *, double *, int),

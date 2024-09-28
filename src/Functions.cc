@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "ggMatrixElements/Utils.h"
+
 double ReB(double z) {
   if (z == 0)  // b is infinite
     return 0;
