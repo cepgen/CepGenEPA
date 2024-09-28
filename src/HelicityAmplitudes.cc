@@ -413,3 +413,27 @@ void Mppmm_vector(double sred, double tred, double* re, double* im, int exclude_
     // }
   }
 }
+
+void Mpppp_eft(double zeta1, double zeta2, double s, double t, double* re, double* im) {
+  *re = -1. / 4. * (4. * zeta1 + 3 * zeta2) * s * s;
+  *im = 0;
+}
+
+void Mpmmp_eft(double zeta1, double zeta2, double s, double t, double* re, double* im) {
+  *re = -1. / 4. * (4. * zeta1 + 3 * zeta2) * t * t;
+  *im = 0;
+}
+
+void Mpmpm_eft(double zeta1, double zeta2, double s, double t, double* re, double* im) {
+  double u = -s - t;
+  *re = -1. / 4. * (4. * zeta1 + 3 * zeta2) * u * u;
+  *im = 0;
+}
+
+void Mpppm_eft(double zeta1, double zeta2, double s, double t, double* re, double* im) { *re = *im = 0.; }
+
+void Mppmm_eft(double zeta1, double zeta2, double s, double t, double* re, double* im) {
+  double u = -s - t;
+  *re = -1. / 4. * (4. * zeta1 + zeta2) * (s * s + t * t + u * u);
+  *im = 0;
+}
