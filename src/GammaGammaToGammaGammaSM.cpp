@@ -2,9 +2,9 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "ggMatrixElements/Constants.h"
-#include "ggMatrixElements/HelicityAmplitudes.h"
-#include "ggMatrixElements/MatrixElements.h"
+#include "CepGenEPA/Constants.h"
+#include "CepGenEPA/HelicityAmplitudes.h"
+#include "CepGenEPA/MatrixElements.h"
 
 namespace sm_aaaa {
   const double prefac_W = 1. / (4 * constants::mW * constants::mW);

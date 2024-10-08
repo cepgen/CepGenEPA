@@ -1,11 +1,11 @@
 #include <boost/python.hpp>
 
-#include "ggMatrixElements/MatrixElements.h"
+#include "CepGenEPA/MatrixElements.h"
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(sqme_sm, sm_aaaa::sqme, 2, 3)
 BOOST_PYTHON_FUNCTION_OVERLOADS(sqme_eft, eft_aaaa::sqme, 2, 5)
 
-BOOST_PYTHON_MODULE(ggMatrixElements) {
+BOOST_PYTHON_MODULE(CepGenEPA) {
   namespace py = boost::python;
 
   py::def("sqme_sm", sm_aaaa::sqme, sqme_sm((py::arg("s"), py::arg("t"), py::arg("exclude_loops") = false)));

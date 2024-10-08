@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "ggMatrixElements/Utils.h"
+#include "CepGenEPA/Utils.h"
 
 double ReB(double z) {
   if (z == 0)  // b is infinite

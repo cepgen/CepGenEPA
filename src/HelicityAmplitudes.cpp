@@ -3,8 +3,8 @@
 
 #include <cmath>
 
-#include "ggMatrixElements/Constants.h"
-#include "ggMatrixElements/Utils.h"
+#include "CepGenEPA/Constants.h"
+#include "CepGenEPA/Utils.h"
 
 const double PI = 4 * atan(1);
 const int low = 1;
