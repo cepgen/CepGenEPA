@@ -1,12 +1,12 @@
 // Computes different helicity amplitudes as defined in
 // Costantini, DeTollis, Pistoni; Nuovo Cim. A2 (1971) 733-787
 
+#include <CepGen/Physics/PDG.h>
+
 #include <cmath>
 
-#include "CepGenEPA/Constants.h"
 #include "CepGenEPA/Utils.h"
 
-const double PI = 4 * atan(1);
 const int low = 1;
 const int high = 2;
 const int forward = 3;
@@ -83,7 +83,7 @@ void Mpppp_fermion(double sred, double tred, double* re, double* im, int exclude
              (-1. + 2. * sred) * ImT(sred) + (-1. - 2. * sred + 4. * sred * sred) * ImT(-sred));
     } else if (region == high) {  // high energy limit
       *re = 1. + (tred - ured) / sred * log(tred / ured) +
-            (tred * tred + ured * ured) / (2. * sred * sred) * (pow(log(tred / ured), 2) + PI * PI);
+            (tred * tred + ured * ured) / (2. * sred * sred) * (pow(log(tred / ured), 2) + M_PI * M_PI);
       *im = 0;
     } else {
       Mxxxx_fermion(sred, tred, re, im);
@@ -115,7 +115,7 @@ void Mpmmp_fermion(double sred, double tred, double* re, double* im, int exclude
     } else if (region == high) {  // high energy limit
       *re = 1. + (sred - ured) / tred * log(-sred / ured) +
             (sred * sred + ured * ured) / (2. * tred * tred) * pow(log(-sred / ured), 2);
-      *im = -PI * ((sred - ured) / tred + (sred * sred + ured * ured) / (tred * tred) * log(-sred / ured));
+      *im = -M_PI * ((sred - ured) / tred + (sred * sred + ured * ured) / (tred * tred) * log(-sred / ured));
     } else {
       Mxxxx_fermion(tred, sred, re, im);
     }
@@ -146,7 +146,7 @@ void Mpmpm_fermion(double sred, double tred, double* re, double* im, int exclude
     } else if (region == high) {  // high energy limit
       *re = 1. + (tred - sred) / ured * log(-tred / sred) +
             (sred * sred + tred * tred) / (2. * ured * ured) * pow(log(-tred / sred), 2);
-      *im = PI * ((tred - sred) / ured + (sred * sred + tred * tred) / (ured * ured) * log(-tred / sred));
+      *im = M_PI * ((tred - sred) / ured + (sred * sred + tred * tred) / (ured * ured) * log(-tred / sred));
     } else {
       Mxxxx_fermion(ured, tred, re, im);
     }
@@ -283,11 +283,11 @@ void Mpppp_vector(double sred, double tred, double* re, double* im, int exclude_
     } else if (region == high) {  // high energy limit
       *re = -1. *
             (1.5 + 1.5 * (ured - tred) / sred * log(ured / tred) +
-             2. * (1. - 0.75 * tred * ured / (sred * sred)) * (pow(log(ured / tred), 2) + PI * PI) +
+             2. * (1. - 0.75 * tred * ured / (sred * sred)) * (pow(log(ured / tred), 2) + M_PI * M_PI) +
              2. * sred * sred *
                  (log(4. * sred) * log(-4. * tred) / (sred * tred) + log(4. * sred) * log(-4. * ured) / (sred * ured) +
                   log(-4. * ured) * log(-4. * tred) / (ured * tred)));
-      *im = (2. * PI * sred * sred * (log(-4. * ured) / (sred * ured) + log(-4. * tred) / (sred * tred)));
+      *im = (2. * M_PI * sred * sred * (log(-4. * ured) / (sred * ured) + log(-4. * tred) / (sred * tred)));
     } else {
       Mxxxx_vector(sred, tred, re, im);
     }
@@ -324,9 +324,9 @@ void Mpmmp_vector(double sred, double tred, double* re, double* im, int exclude_
                   (log(4. * sred) * log(-4. * tred) / (sred * tred) + log(4. * sred) * log(-4. * ured) / (sred * ured) +
                    log(-4. * ured) * log(-4. * tred) / (ured * tred)));
 
-      *im = -(1.5 * (sred - ured) / tred * (-PI) +
-              2. * (1. - 0.75 * sred * ured / (tred * tred)) * PI * 2. * log(-ured / sred) +
-              2. * (-PI) * tred * tred * (log(-4. * ured) / (ured * sred) + log(-4. * tred) / (tred * sred)));
+      *im = -(1.5 * (sred - ured) / tred * (-M_PI) +
+              2. * (1. - 0.75 * sred * ured / (tred * tred)) * M_PI * 2. * log(-ured / sred) +
+              2. * (-M_PI) * tred * tred * (log(-4. * ured) / (ured * sred) + log(-4. * tred) / (tred * sred)));
     } else {
       Mxxxx_vector(tred, sred, re, im);
     }
@@ -362,9 +362,9 @@ void Mpmpm_vector(double sred, double tred, double* re, double* im, int exclude_
               2. * ured * ured *
                   (log(4. * sred) * log(-4. * tred) / (sred * tred) + log(4. * sred) * log(-4. * ured) / (sred * ured) +
                    log(-4. * ured) * log(-4. * tred) / (ured * tred)));
-      *im = -(1.5 * (sred - tred) / ured * (-PI) +
-              2. * (1. - 0.75 * sred * tred / (ured * ured)) * PI * 2. * log(-tred / sred) +
-              2. * (-PI) * ured * ured * (log(-4. * ured) / (ured * sred) + log(-4. * tred) / (tred * sred)));
+      *im = -(1.5 * (sred - tred) / ured * (-M_PI) +
+              2. * (1. - 0.75 * sred * tred / (ured * ured)) * M_PI * 2. * log(-tred / sred) +
+              2. * (-M_PI) * ured * ured * (log(-4. * ured) / (ured * sred) + log(-4. * tred) / (tred * sred)));
     } else {
       Mxxxx_vector(ured, tred, re, im);
     }
