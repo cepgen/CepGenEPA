@@ -3,7 +3,6 @@ from Config.PDG_cfi import PDG
 from Config.timer_cfi import timer # enable timing framework
 #from Integrators.miser_cfi import miser as integrator
 #from Integrators.foam_cfi import foam as integrator
-from trapint_electron_Hamzeh import cs_electron_w_condition_Hamzeh
 
 
 #integrator = cepgen.Module('bases')
@@ -14,7 +13,8 @@ from Config.logger_cfi import logger
 process = cepgen.Module('pythonEPA',
     processParameters = cepgen.Parameters(
         mode = cepgen.ProcessMode.ElasticElastic,
-        process = cs_electron_w_condition_Hamzeh,
+        process = 'trapint_electron_Hamzeh.cs_electron_w_condition_Hamzeh',
+        fluxes = 'Syy.flux_el_yy_atW',
     ),
     inKinematics = cepgen.Parameters(
         pz = (50., 7000.),

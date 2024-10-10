@@ -117,7 +117,7 @@ sys.path.append('./values')
 
 
 
-
+'''
 from wgrid_3_10_10 import *
 
 wv = np.array(wvalues[3])
@@ -168,4 +168,4 @@ plt.savefig("cs_electron_MN2_mMin2_q2min_Final_25April.jpg")
 
 plt.show()
 
-
+'''

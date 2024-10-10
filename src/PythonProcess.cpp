@@ -22,7 +22,11 @@
 #include <CepGen/Modules/ProcessFactory.h>
 #include <CepGen/Physics/PDG.h>
 #include <CepGen/Process/Process.h>
-#include <CepGenPython/Environment.h>
+#include <CepGen/Utils/Environment.h>
+#include <CepGen/Utils/Math.h>
+#include <CepGen/Utils/String.h>
+#include <CepGenPython/Error.h>
+#include <CepGenPython/Functional.h>
 #include <CepGenPython/ObjectPtr.h>
 
 using namespace cepgen;
@@ -30,10 +34,7 @@ using namespace cepgen;
 class PythonProcess final : public cepgen::proc::Process {
 public:
   explicit PythonProcess(const ParametersList& params)
-      : proc::Process(params),
-        env_(steer<ParametersList>("environment")),
-        //python_function_{},
-        pair_(steer<ParticleProperties>("LPAIR")) {}
+      : proc::Process(params), pair_(steer<ParticleProperties>("LPAIR")) {}
 
   proc::ProcessPtr clone() const override { return proc::ProcessPtr(new PythonProcess(*this)); }
 
@@ -46,10 +47,40 @@ public:
                                     {Particle::Role::OutgoingBeam2, {PDG::proton}},
                                     {Particle::Role::CentralSystem, {+(spdgid_t)pair_.pdgid, -(spdgid_t)pair_.pdgid}}});
   }
-  void prepareKinematics() override {}
+  void prepareKinematics() override {
+    environment_.reset(new python::Environment(steer<ParametersList>("environment")));
+    const auto get_functional = [this](const std::string& python_name, std::shared_ptr<python::Functional>& function) {
+      const auto module_path = python_name.substr(0, python_name.rfind('.')),
+                 function_path = python_name.substr(python_name.rfind('.') + 1);
+      if (auto mod = python::ObjectPtr::importModule(module_path); mod) {
+        CG_INFO("PythonProcess") << "Module '" << module_path << "' properly initialised. Will retrieve function '"
+                                 << function_path << "'.";
+        if (auto func = mod.attribute(function_path); func) {
+          CG_INFO("PythonProcess") << "Function '" << function_path
+                                   << "' was properly initialised. Attributes: " << func << ".";
+          function.reset(new python::Functional(func));
+        } else
+          throw PY_ERROR << "Failed to retrieve a function '" << function_path << "' from Python module '"
+                         << module_path << "'.";
+      } else
+        throw PY_ERROR << "Failed to import Python module '" << module_path << "'.";
+    };
+    get_functional(steer<std::string>("process"), central_function_);
+    get_functional(steer<std::string>("fluxes"), fluxes_function_);
+    defineVariable(
+        m_w_central_, Mapping::linear, kinematics().cuts().central.mass_sum.truncate(Limits{0., 250.}), "w_central");
+  }
   double computeWeight() override {
-    return 0.;
-    //return python_function_(m_x_.data());
+    CG_ASSERT(central_function_);
+    const auto central_weight = central_function_->operator()(m_w_central_);
+    if (!utils::positive(central_weight))
+      return 0.;
+    const auto fluxes_weight = fluxes_function_->operator()({m_w_central_,
+                                                             pA().energy(),
+                                                             pB().energy(),
+                                                             kinematics().cuts().initial.q2.at(0).max(),
+                                                             kinematics().cuts().initial.q2.at(1).max()});
+    return central_weight * fluxes_weight;
   }
   void fillKinematics() override {
     /*pA() = Momentum(sp4vec_.vec[1].data());
@@ -67,10 +98,11 @@ public:
   }
 
 private:
-  const python::Environment env_;
-  //const utils::Function1D python_function_;
+  std::shared_ptr<python::Environment> environment_;
+  std::shared_ptr<python::Functional> central_function_{nullptr}, fluxes_function_{nullptr};
   const ParticleProperties pair_;
-  std::array<double, 10> m_x_;  ///< mapped variables
+  // mapped variables
+  double m_w_central_{0.};
 };
 // register process
 REGISTER_PROCESS("pythonEPA", PythonProcess);
