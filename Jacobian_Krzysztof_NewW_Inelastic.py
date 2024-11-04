@@ -1,4 +1,5 @@
-# Photon-Photon-Luminosity-Spectrum-Hamzeh_with_W_Parallel_Final_Expression_dlnq2_Jacobian
+# Photon-Photon-Luminosity-Spectrum-Hamzeh_with_W_Parallel_Final_Expression_dlnq2_Jacobian_Inelastic_Case
+# Hamzeh, Laurent and Krzysztof ---- 4 November 2024
 
 import numpy as np
 import math
@@ -145,7 +146,7 @@ def compute_jacobian(ye, Ee, Ep, W):
     return jacobian
 
 
-# Photon Flux from Electron (using lnQ2 as the integration variable)
+# Photon Flux from Electron (using lnQ2 as the integration variable) (Equation F.13)
 def flux_y_electron(ye, lnQ2e):
     Q2e = np.exp(lnQ2e)
     if ye <= 0 or ye >= 1:
@@ -160,7 +161,7 @@ def flux_y_electron(ye, lnQ2e):
 
 
 
-# Photon Flux from Proton for Inelastic Case (Equation F.13) using lnQ2p as the integration variable
+# Photon Flux from Proton for Inelastic Case (Equation F.14) using lnQ2p as the integration variable
 def flux_y_proton(yp, lnQ2p, MN):
     Q2p = np.exp(lnQ2p)
     xbj = Q2p / (MN**2 - pmass**2 + Q2p)
@@ -181,7 +182,7 @@ def flux_y_proton(yp, lnQ2p, MN):
 
 
 
-# Photon-Photon Luminosity Spectrum Calculation (Final Form using the Jacobian)
+# The Inelastic Photon-Photon Luminosity Spectrum Calculation (Final Form using the Jacobian) (F.19)
 def flux_el_yy_atW(W, eEbeam, pEbeam):
     s_cms = 4.0 * eEbeam * pEbeam  # Center-of-mass energy squared
 
@@ -212,7 +213,7 @@ def flux_el_yy_atW(W, eEbeam, pEbeam):
                     return 0.0
 
                 # Integration over Q2p using lnQ2p as the integration variable
-                qmin2p = qmin2_proton(MN, 0.01)  # Using the new function for proton Qmin2
+                qmin2p = qmin2_proton(MN, 0.01) # yp_value - Dicsussion is needed
                 lnQ2p_min = math.log(qmin2p)
                 lnQ2p_max = math.log(q2pmax)
 
@@ -225,7 +226,7 @@ def flux_el_yy_atW(W, eEbeam, pEbeam):
                     if yp_value <= 0 or yp_value >= 1:
                         return 0.0
 
-                    # Calculate the photon flux from the proton using the inelastic structure function (F.19)
+                    # To calculate the integratio of photon flux from the proton using the inelastic structure function
                     proton_flux = flux_y_proton(yp_value, lnQ2p, MN)
                     return proton_flux / jacobian
 
