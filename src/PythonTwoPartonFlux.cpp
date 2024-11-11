@@ -31,7 +31,11 @@ public:
       : epa::TwoPartonFlux(params),
         fragmenting_(steer<bool>("fragmenting")),
         parton_pdg_id_(steer<int>("partonPdgId")),
-        functional_(python::functional(steer<std::string>("function"))) {}
+        functional_(python::functional(steer<std::string>("function"))),
+        eb1_(steer<double>("eb1")),
+        eb2_(steer<double>("eb2")),
+        q2max1_(steer<double>("q2max1")),
+        q2max2_(steer<double>("q2max2")) {}
 
   static ParametersDescription description() {
     auto desc = epa::TwoPartonFlux::description();
@@ -40,7 +44,9 @@ public:
     return desc;
   }
 
-  double flux(double w) const override { return functional_->operator()(w); }
+  double flux(double w) const override {
+    return functional_->operator()(std::vector<double>{w, eb1_, eb2_, q2max1_, q2max2_});
+  }
 
   inline bool fragmenting() const override { return fragmenting_; }
 
@@ -52,5 +58,6 @@ private:
   const bool fragmenting_;
   const int parton_pdg_id_;
   const std::unique_ptr<python::Functional> functional_;
+  const double eb1_, eb2_, q2max1_, q2max2_;
 };
 REGISTER_TWOPARTON_FLUX("python", PythonTwoPartonFlux);

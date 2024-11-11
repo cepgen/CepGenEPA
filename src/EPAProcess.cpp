@@ -37,17 +37,7 @@ namespace cepgen {
   class EPAProcess : public proc::Process {
   public:
     explicit EPAProcess(const ParametersList& params)
-        : proc::Process(params),
-          environment_(steer<ParametersList>("environment")),
-          partons_flux_(TwoPartonFluxFactory::get().build(steer<ParametersList>("partonsFlux"))) {
-      const auto matrix_element_definition = steer<ParametersList>("matrixElement");
-      if (const auto type = matrix_element_definition.get<std::string>("type"); type == "python") {
-        central_function_ = python::functional(matrix_element_definition.get<std::string>("process"));
-        const auto cs_particles = matrix_element_definition.get<std::vector<int> >("centralSystem");
-        central_system_ = spdgids_t(cs_particles.begin(), cs_particles.end());
-      } else
-        throw CG_FATAL("EPAProcess") << "Invalid matrix element type requested: '" << type << "'.";
-    }
+        : proc::Process(params), environment_(steer<ParametersList>("environment")) {}
 
     proc::ProcessPtr clone() const { return std::make_unique<EPAProcess>(parameters()); }
 
@@ -71,19 +61,26 @@ namespace cepgen {
                                       {Particle::Role::CentralSystem, central_system_}});
     }
     void prepareKinematics() override {
+      partons_flux_ = TwoPartonFluxFactory::get().build(ParametersList(steer<ParametersList>("partonsFlux"))
+                                                            .set("eb1", pA().energy())
+                                                            .set("eb2", pB().energy())
+                                                            .set("q2max1", kinematics().cuts().initial.q2.at(0).max())
+                                                            .set("q2max2", kinematics().cuts().initial.q2.at(1).max()));
+      const auto matrix_element_definition = steer<ParametersList>("matrixElement");
+      if (const auto type = matrix_element_definition.get<std::string>("type"); type == "python") {
+        central_function_ = python::functional(matrix_element_definition.get<std::string>("process"));
+        const auto cs_particles = matrix_element_definition.get<std::vector<int> >("centralSystem");
+        central_system_ = spdgids_t(cs_particles.begin(), cs_particles.end());
+      } else
+        throw CG_FATAL("EPAProcess") << "Invalid matrix element type requested: '" << type << "'.";
       defineVariable(
           m_w_central_, Mapping::linear, kinematics().cuts().central.mass_sum.truncate(Limits{0., 250.}), "w_central");
     }
     double computeWeight() override {
-      const auto central_weight = central_function_->operator()(m_w_central_);
+      const auto central_weight = central_function_->operator()({m_w_central_});
       if (!utils::positive(central_weight))
         return 0.;
-      /*const auto fluxes_weight = fluxes_function_->operator()({m_w_central_,
-                                                           pA().energy(),
-                                                           pB().energy(),
-                                                           kinematics().cuts().initial.q2.at(0).max(),
-                                                           kinematics().cuts().initial.q2.at(1).max()});*/
-      const auto fluxes_weight = partons_flux_->flux(m_w_central_);
+      const auto fluxes_weight = partons_flux_->flux({m_w_central_});
       return central_weight * fluxes_weight;
     }
     void fillKinematics() override {
