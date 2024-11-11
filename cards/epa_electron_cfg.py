@@ -10,11 +10,16 @@ from Config.logger_cfi import logger
 #logger.enabledModules += ('Process.weight',)
 
 
-process = cepgen.Module('pythonEPA',
+process = cepgen.Module('epa',
     processParameters = cepgen.Parameters(
         mode = cepgen.ProcessMode.ElasticElastic,
-        process = 'trapint_electron_Hamzeh.cs_electron_w_condition_Hamzeh',
-        fluxes = 'Syy.flux_el_yy_atW',
+        matrixElement = cepgen.Parameters(
+            type = 'python',
+            process = 'trapint_electron_Hamzeh.cs_electron_w_condition_Hamzeh',
+        ),
+        partonsFlux = cepgen.Module('python',
+            function = 'Syy.flux_el_yy_atW',
+        ),
     ),
     inKinematics = cepgen.Parameters(
         pz = (50., 7000.),
