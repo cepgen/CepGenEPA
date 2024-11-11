@@ -45,7 +45,7 @@ namespace cepgen {
       auto desc = proc::Process::description();
       desc.setDescription("Generic EPA process");
       auto me_description = ParametersDescription();
-      me_description.add("process", ""s).setDescription("process internal name (or python functional)");
+      me_description.add("function", ""s).setDescription("process internal name (or python functional)");
       me_description.add("centralSystem", std::vector<int>{13, -13});
       desc.add("matrixElement", me_description);
       return desc;
@@ -67,12 +67,12 @@ namespace cepgen {
                                                             .set("q2max1", kinematics().cuts().initial.q2.at(0).max())
                                                             .set("q2max2", kinematics().cuts().initial.q2.at(1).max()));
       const auto matrix_element_definition = steer<ParametersList>("matrixElement");
-      if (const auto type = matrix_element_definition.get<std::string>("type"); type == "python") {
-        central_function_ = python::functional(matrix_element_definition.get<std::string>("process"));
+      if (const auto name = matrix_element_definition.name(); name == "python") {
+        central_function_ = python::functional(matrix_element_definition.get<std::string>("function"));
         const auto cs_particles = matrix_element_definition.get<std::vector<int> >("centralSystem");
         central_system_ = spdgids_t(cs_particles.begin(), cs_particles.end());
       } else
-        throw CG_FATAL("EPAProcess") << "Invalid matrix element type requested: '" << type << "'.";
+        throw CG_FATAL("EPAProcess") << "Invalid matrix element type requested: '" << name << "'.";
       defineVariable(
           m_w_central_, Mapping::linear, kinematics().cuts().central.mass_sum.truncate(Limits{0., 250.}), "w_central");
     }

@@ -13,9 +13,8 @@ from Config.logger_cfi import logger
 process = cepgen.Module('epa',
     processParameters = cepgen.Parameters(
         mode = cepgen.ProcessMode.ElasticElastic,
-        matrixElement = cepgen.Parameters(
-            type = 'python',
-            process = 'trapint_electron_Hamzeh.cs_electron_w_condition_Hamzeh',
+        matrixElement = cepgen.Module('python',
+            function = 'trapint_electron_Hamzeh.cs_electron_w_condition_Hamzeh',
         ),
         partonsFlux = cepgen.Module('python',
             function = 'Syy.flux_el_yy_atW',
