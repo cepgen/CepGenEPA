@@ -17,6 +17,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <CepGen/Core/Exception.h>
+#include <CepGenPython/Environment.h>
 #include <CepGenPython/Functional.h>
 
 #include "CepGenEPA/PythonUtils.h"
@@ -29,13 +31,20 @@ class PythonTwoPartonFlux final : public epa::TwoPartonFlux {
 public:
   explicit PythonTwoPartonFlux(const ParametersList& params)
       : epa::TwoPartonFlux(params),
+        environment_(steer<ParametersList>("environment")),
         fragmenting_(steer<bool>("fragmenting")),
         parton_pdg_id_(steer<int>("partonPdgId")),
         functional_(python::functional(steer<std::string>("function"))),
         eb1_(steer<double>("eb1")),
         eb2_(steer<double>("eb2")),
         q2max1_(steer<double>("q2max1")),
-        q2max2_(steer<double>("q2max2")) {}
+        q2max2_(steer<double>("q2max2")) {
+    if (!environment_.initialised())
+      throw CG_ERROR("PythonTwoPartonFlux") << "Failed to initialise the Python environment.";
+    if (!functional_)
+      throw CG_ERROR("PythonTwoPartonFlux") << "Failed to retrieve the functional '" << steer<std::string>("function")
+                                            << "' from the Python environment.";
+  }
 
   static ParametersDescription description() {
     auto desc = epa::TwoPartonFlux::description();
@@ -49,12 +58,11 @@ public:
   }
 
   inline bool fragmenting() const override { return fragmenting_; }
-
   inline pdgid_t partonPdgId() const override { return parton_pdg_id_; }
-
   inline double mass2() const override { return 0.; }
 
 private:
+  const python::Environment environment_;
   const bool fragmenting_;
   const int parton_pdg_id_;
   const std::unique_ptr<python::Functional> functional_;
