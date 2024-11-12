@@ -9,17 +9,10 @@
 #include "CepGenEPA/MatrixElements.h"
 
 namespace sm_aaaa {
-  const double prefac_W = 0.25 / std::pow(cepgen::PDG::get().mass(23 /*W*/), 2);
+  double prefac_W = -1.;
   const std::array<double, 9> SM_weight = {1, 1, 1, 16. / 27., 16. / 27., 16. / 27., 1. / 27., 1. / 27., 1. / 27.};
-  const std::array<double, 9> SM_masses = {cepgen::PDG::get().mass(11),
-                                           cepgen::PDG::get().mass(13),
-                                           cepgen::PDG::get().mass(15),
-                                           cepgen::PDG::get().mass(2),
-                                           cepgen::PDG::get().mass(4),
-                                           cepgen::PDG::get().mass(6),
-                                           cepgen::PDG::get().mass(1),
-                                           cepgen::PDG::get().mass(3),
-                                           cepgen::PDG::get().mass(5)};
+  std::array<double, 9> SM_masses;
+  bool initialised = false;
 
   void me_SM(void (*me)(double, double, double *, double *, int),
              double s,
@@ -27,6 +20,19 @@ namespace sm_aaaa {
              double *re,
              double *im,
              bool exclude_loops) {
+    if (!initialised) {
+      prefac_W = 0.25 / std::pow(cepgen::PDG::get().mass(23 /*W*/), 2);
+      SM_masses = {cepgen::PDG::get().mass(11),
+                   cepgen::PDG::get().mass(13),
+                   cepgen::PDG::get().mass(15),
+                   cepgen::PDG::get().mass(2),
+                   cepgen::PDG::get().mass(4),
+                   cepgen::PDG::get().mass(6),
+                   cepgen::PDG::get().mass(1),
+                   cepgen::PDG::get().mass(3),
+                   cepgen::PDG::get().mass(5)};
+      initialised = true;
+    }
     // This routine computes the complex SM amplitude
     // The first argument can be any of the helicity amplitudes Mpppp,Mppmm,Mpmpm,Mpmmp,Mpppm
 
