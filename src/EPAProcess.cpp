@@ -16,38 +16,30 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <CepGen/Core/Exception.h>
 #include <CepGen/Event/Event.h>
 #include <CepGen/Modules/ProcessFactory.h>
 #include <CepGen/Physics/PDG.h>
 #include <CepGen/Process/Process.h>
-#include <CepGen/Utils/Functional.h>
 #include <CepGen/Utils/Math.h>
-#include <CepGen/Utils/String.h>
-#include <CepGenPython/Environment.h>
-#include <CepGenPython/Functional.h>
 
-#include "CepGenEPA/PythonUtils.h"
 #include "CepGenEPA/TwoPartonFlux.h"
 #include "CepGenEPA/TwoPartonFluxFactory.h"
+#include "CepGenEPA/TwoPartonProcess.h"
+#include "CepGenEPA/TwoPartonProcessFactory.h"
 
 using namespace std::string_literals;
 
 namespace cepgen {
   class EPAProcess : public proc::Process {
   public:
-    explicit EPAProcess(const ParametersList& params)
-        : proc::Process(params), environment_(steer<ParametersList>("environment")) {}
+    explicit EPAProcess(const ParametersList& params) : proc::Process(params) {}
 
     proc::ProcessPtr clone() const { return std::make_unique<EPAProcess>(parameters()); }
 
     static ParametersDescription description() {
       auto desc = proc::Process::description();
       desc.setDescription("Generic EPA process");
-      auto me_description = ParametersDescription();
-      me_description.add("function", ""s).setDescription("process internal name (or python functional)");
-      me_description.add("centralSystem", std::vector<int>{13, -13});
-      desc.add("matrixElement", me_description);
+      desc.add("logW", true).setDescription("Use a logarithmic mapping of the w distribution?");
       return desc;
     }
 
@@ -61,26 +53,31 @@ namespace cepgen {
                                       {Particle::Role::CentralSystem, central_system_}});
     }
     void prepareKinematics() override {
+      const auto w_range = kinematics().cuts().central.mass_sum.truncate(Limits{1.e-9, (pA() + pB()).mass()});
+      if (steer<bool>("logW"))
+        defineVariable(m_w_central_, Mapping::exponential, w_range.compute(std::log), "w_central");
+      else
+        defineVariable(m_w_central_, Mapping::linear, w_range, "w_central");
       partons_flux_ = TwoPartonFluxFactory::get().build(ParametersList(steer<ParametersList>("partonsFlux"))
                                                             .set("eb1", pA().energy())
                                                             .set("eb2", pB().energy())
-                                                            .set("q2max1", kinematics().cuts().initial.q2.at(0).max())
-                                                            .set("q2max2", kinematics().cuts().initial.q2.at(1).max()));
-      const auto matrix_element_definition = steer<ParametersList>("matrixElement");
-      if (const auto name = matrix_element_definition.name(); name == "python") {
-        central_function_ = python::functional(matrix_element_definition.get<std::string>("function"));
-        const auto cs_particles = matrix_element_definition.get<std::vector<int> >("centralSystem");
-        central_system_ = spdgids_t(cs_particles.begin(), cs_particles.end());
-      } else
-        throw CG_FATAL("EPAProcess") << "Invalid matrix element type requested: '" << name << "'.";
-      defineVariable(
-          m_w_central_, Mapping::linear, kinematics().cuts().central.mass_sum.truncate(Limits{0., 250.}), "w_central");
+                                                            .set("wRange", w_range)
+                                                            .set("q2Range1", kinematics().cuts().initial.q2.at(0))
+                                                            .set("q2Range2", kinematics().cuts().initial.q2.at(1)));
+      central_process_ = TwoPartonProcessFactory::get().build(steer<ParametersList>("matrixElement"));
+      {  // register the list of particles in the central system
+        central_system_.clear();
+        for (const auto& central_particle : central_process_->centralParticles())
+          central_system_.emplace_back(central_particle);
+      }
     }
     double computeWeight() override {
-      const auto central_weight = central_function_->operator()({m_w_central_});
+      const auto central_weight = central_process_->matrixElement(m_w_central_);
       if (!utils::positive(central_weight))
         return 0.;
-      const auto fluxes_weight = partons_flux_->flux({m_w_central_});
+      const auto fluxes_weight = partons_flux_->flux(m_w_central_);
+      if (!utils::positive(fluxes_weight))
+        return 0.;
       return central_weight * fluxes_weight;
     }
     void fillKinematics() override {
@@ -93,13 +90,11 @@ namespace cepgen {
     }
 
   private:
-    python::Environment environment_;
     std::unique_ptr<epa::TwoPartonFlux> partons_flux_;
-    std::unique_ptr<utils::Functional> central_function_;
+    std::unique_ptr<epa::TwoPartonProcess> central_process_;
 
     spdgids_t central_system_;
-    // mapped variables
-    double m_w_central_{0.};
+    double m_w_central_{0.};  ///< central, two-parton invariant mass
   };
 }  // namespace cepgen
 REGISTER_PROCESS("epa", EPAProcess);

@@ -26,9 +26,13 @@ namespace cepgen::epa {
   /// Base object for a collinear parton flux parameterisation
   class TwoPartonFlux : public PartonFlux {
   public:
-    explicit TwoPartonFlux(const ParametersList&);
+    explicit TwoPartonFlux(const ParametersList& params) : PartonFlux(params) {}
 
-    static ParametersDescription description();
+    static ParametersDescription description() {
+      auto desc = PartonFlux::description();
+      desc.setDescription("Two-parton mass-dependent flux");
+      return desc;
+    }
 
     /// Compute the collinear flux for this central mass w
     virtual double flux(double w) const = 0;

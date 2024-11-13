@@ -28,6 +28,9 @@ process = cepgen.Module('epa',
         pz = (50., 7000.),
         pdgIds = (11, 2212),
     ),
+    outKinematics = cepgen.Parameters(
+        invmass = (10.,),
+    )
 )
 
 generator = cepgen.Parameters(

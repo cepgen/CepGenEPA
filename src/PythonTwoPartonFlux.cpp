@@ -37,8 +37,8 @@ public:
         functional_(python::functional(steer<std::string>("function"))),
         eb1_(steer<double>("eb1")),
         eb2_(steer<double>("eb2")),
-        q2max1_(steer<double>("q2max1")),
-        q2max2_(steer<double>("q2max2")) {
+        q2range1_(steer<Limits>("q2Range1")),
+        q2range2_(steer<Limits>("q2Range2")) {
     if (!environment_.initialised())
       throw CG_ERROR("PythonTwoPartonFlux") << "Failed to initialise the Python environment.";
     if (!functional_)
@@ -52,14 +52,14 @@ public:
     desc.add<bool>("fragmenting", false).setDescription("is the beam particle fragmenting after parton emission?");
     desc.add<int>("partonPdgId", 22).setDescription("PDG id of the emitted parton");
     desc.add<double>("eb1", 7000.).setDescription("positive-z beam particle energy, in GeV");
-    desc.add<double>("q2max1", 1000.).setDescription("maximum positive-z parton virtuality, in GeV^2");
     desc.add<double>("eb2", 7000.).setDescription("negative-z beam particle energy, in GeV");
-    desc.add<double>("q2max2", 1000.).setDescription("maximum negative-z parton virtuality, in GeV^2");
+    desc.add("q2Range1", Limits{0., 1000.}).setDescription("positive-z parton virtuality range, in GeV^2");
+    desc.add("q2Range2", Limits{0., 1000.}).setDescription("negative-z parton virtuality range, in GeV^2");
     return desc;
   }
 
   double flux(double w) const override {
-    return functional_->operator()(std::vector<double>{w, eb1_, eb2_, q2max1_, q2max2_});
+    return functional_->operator()(std::vector<double>{w, eb1_, eb2_, q2range1_.max(), q2range2_.max()});
   }
 
   inline bool fragmenting() const override { return fragmenting_; }
@@ -71,6 +71,7 @@ private:
   const bool fragmenting_;
   const int parton_pdg_id_;
   const std::unique_ptr<python::Functional> functional_;
-  const double eb1_, eb2_, q2max1_, q2max2_;
+  const double eb1_, eb2_;
+  const Limits q2range1_, q2range2_;
 };
 REGISTER_TWOPARTON_FLUX("python", PythonTwoPartonFlux);
