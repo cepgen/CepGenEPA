@@ -25,16 +25,16 @@ namespace cepgen::python {
     const auto module_path = python_name.substr(0, python_name.rfind('.')),
                function_path = python_name.substr(python_name.rfind('.') + 1);
     if (auto mod = ObjectPtr::importModule(module_path); mod) {
-      CG_DEBUG("PythonProcess") << "Module '" << module_path << "' properly initialised. Will retrieve function '"
-                                << function_path << "'.";
+      CG_DEBUG("python::functional") << "Module '" << module_path << "' properly initialised. "
+                                     << "Will retrieve function '" << function_path << "'.";
       if (auto func = mod.attribute(function_path); func) {
-        CG_DEBUG("PythonProcess") << "Function '" << function_path << "' was properly initialised. Attributes: " << func
-                                  << ".";
+        CG_DEBUG("python::functional") << "Function '" << function_path << "' was properly initialised. "
+                                       << "Attributes: " << func << ".";
         return std::make_unique<Functional>(func);
       }
       throw PY_ERROR << "Failed to retrieve a function '" << function_path << "' from Python module '" << module_path
                      << "'.";
-    } else
-      throw PY_ERROR << "Failed to import Python module '" << module_path << "'.";
+    }
+    throw PY_ERROR << "Failed to import Python module '" << module_path << "'.";
   }
 }  // namespace cepgen::python
