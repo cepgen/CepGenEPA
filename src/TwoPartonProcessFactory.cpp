@@ -18,6 +18,7 @@
 
 #include <CepGen/Core/Exception.h>
 #include <CepGen/Modules/ModuleFactory.h>
+#include <CepGen/Utils/String.h>
 
 #include "CepGenEPA/TwoPartonProcess.h"
 
@@ -38,10 +39,22 @@ namespace cepgen {
   template <>
   std::unique_ptr<epa::TwoPartonProcess> ModuleFactory<epa::TwoPartonProcess>::build(
       const ParametersList& params) const {
-    const auto mod_name = params.name();
-    if (mod_name.empty())
+    const auto name = params.name();
+    if (name.empty())
       throw CG_FATAL("ModuleFactory")
           << "Failed to retrieve a process name for the two-parton-level process evaluator constructors lookup table.";
-    return map_.at(mod_name)(params_map_.at(mod_name).validate(params));
+    const auto extra_params = utils::split(name, '<');
+    const auto mod_name = extra_params.at(0);
+    auto plist = params;
+    if (extra_params; !extra_params.empty()) {
+      plist.setName(extra_params.at(0));
+      if (extra_params.size() > 1)
+        for (size_t i = 1; i < extra_params.size(); ++i)
+          plist.feed(extra_params.at(i));
+    }
+    if (map_.count(mod_name) == 0)
+      throw CG_FATAL("ModuleFactory") << "No parameters description were found for module name '" << mod_name << "'.\n"
+                                      << "Registered modules: " << modules() << ".";
+    return map_.at(mod_name)(params_map_.at(mod_name).validate(plist));
   }
 }  // namespace cepgen

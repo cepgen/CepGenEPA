@@ -51,6 +51,9 @@ namespace cepgen {
         for (size_t i = 1; i < extra_params.size(); ++i)
           plist.feed(extra_params.at(i));
     }
+    if (map_.count(mod_name) == 0)
+      throw CG_FATAL("ModuleFactory") << "No parameters description were found for module name '" << mod_name << "'.\n"
+                                      << "Registered modules: " << modules() << ".";
     return map_.at(mod_name)(params_map_.at(mod_name).validate(plist));
   }
 }  // namespace cepgen
