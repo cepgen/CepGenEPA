@@ -9,12 +9,20 @@ find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(CepGen REQUIRED)
 
 file(GLOB sources src/*.cpp)
+file(GLOB utils_sources utils/*.cc)
 
 add_library(CepGenEPA SHARED ${sources})
 target_link_libraries(CepGenEPA PRIVATE CepGen::CepGen CepGen::python GSL::gsl ${Boost_LIBRARIES})
 target_include_directories(CepGenEPA PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${Python_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 #set_target_properties(ggMatrixElements PROPERTIES PREFIX "")
 #install(TARGETS ggMatrixElements DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+foreach(_utils_src ${utils_sources})
+  get_filename_component(utils_bin ${_utils_src} NAME_WE)
+  add_executable(${utils_bin} ${_utils_src})
+  target_link_libraries(${utils_bin} PRIVATE CepGen::CepGen CepGenEPA)
+  target_include_directories(${utils_bin} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+endforeach()
 
 # copy the input cards
 file(GLOB_RECURSE input_cards RELATIVE ${PROJECT_SOURCE_DIR} cards/*)
