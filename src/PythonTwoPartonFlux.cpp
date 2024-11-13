@@ -48,8 +48,13 @@ public:
 
   static ParametersDescription description() {
     auto desc = epa::TwoPartonFlux::description();
-    desc.add<bool>("fragmenting", false);
-    desc.add<int>("partonPdgId", 22);
+    desc.add("environment", ParametersDescription()).setDescription("Python environment parameters");
+    desc.add<bool>("fragmenting", false).setDescription("is the beam particle fragmenting after parton emission?");
+    desc.add<int>("partonPdgId", 22).setDescription("PDG id of the emitted parton");
+    desc.add<double>("eb1", 7000.).setDescription("positive-z beam particle energy, in GeV");
+    desc.add<double>("q2max1", 1000.).setDescription("maximum positive-z parton virtuality, in GeV^2");
+    desc.add<double>("eb2", 7000.).setDescription("negative-z beam particle energy, in GeV");
+    desc.add<double>("q2max2", 1000.).setDescription("maximum negative-z parton virtuality, in GeV^2");
     return desc;
   }
 

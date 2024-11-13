@@ -18,18 +18,57 @@
  */
 
 #include <CepGen/Core/Exception.h>
+#include <CepGen/Core/ParametersList.h>
 #include <CepGen/Utils/GridHandler.h>
 #include <CepGen/Utils/Timer.h>
 #include <CepGen/Version.h>
 
 #include <fstream>
+#include <iosfwd>
+#include <iostream>
+#include <memory>
+#include <string>
 
-#include "CepGenEPA/FluxGrid.h"
 #include "CepGenEPA/TwoPartonFlux.h"
 #include "CepGenEPA/TwoPartonFluxFactory.h"
 
 using namespace cepgen;
 using namespace std::string_literals;
+
+namespace cepgen::epa::grid {
+  struct Header {
+    explicit Header(const ParametersList& params)
+        : eb1(params.get<double>("eb1")),
+          eb2(params.get<double>("eb2")),
+          q2max1(params.get<double>("q2max1")),
+          q2max2(params.get<double>("q2max2")),
+          fragmenting(params.get<bool>("fragmenting")),
+          parton_pdg_id(params.get<int>("partonPdgId")) {}
+
+    static int goodMagic() { return 0xdeadb33f; }
+    bool operator==(const Header& oth) const {
+      // skip test of cepgen version
+      return magic_number == oth.magic_number && eb1 == oth.eb1 && eb2 == oth.eb2 && q2max1 == oth.q2max1 &&
+             q2max2 == oth.q2max2 && fragmenting == oth.fragmenting && parton_pdg_id == oth.parton_pdg_id;
+    }
+    bool operator!=(const Header& oth) const { return !(*this == oth); }
+    friend std::ostream& operator<<(std::ostream& os, const Header& header) {
+      return os << "grid/Header{eb1:" << header.eb1 << ", eb2:" << header.eb2 << ", q2max1:" << header.q2max1
+                << ", q2max2:" << header.q2max2 << ", fragmenting:" << std::boolalpha << header.fragmenting
+                << ", parton PDGid:" << header.parton_pdg_id << ", CepGen version:'" << header.cepgen_version << "'}";
+    }
+
+    int magic_number;
+    char cepgen_version[10];
+    double eb1, eb2;
+    double q2max1, q2max2;
+    bool fragmenting;
+    int parton_pdg_id;
+  };
+  struct Value {
+    double w, flux;
+  };
+}  // namespace cepgen::epa::grid
 
 class GridTwoPartonFlux final : public epa::TwoPartonFlux, private GridHandler<1, 1> {
 public:
@@ -37,6 +76,7 @@ public:
       : epa::TwoPartonFlux(params),
         GridHandler<1, 1>(GridType::linear),
         grid_path_(steerPath("path").empty() ? "flux.grid" : steerPath("path")),
+        check_header_(steer<bool>("checkHeader")),
         header_(params_) {
     if (steer<bool>("generateGrid") || steerPath("path").empty())  // grid is not provided by the user ; build it
       buildGrid();
@@ -47,11 +87,12 @@ public:
     auto desc = epa::TwoPartonFlux::description();
     desc.setDescription("Grid interpolator for two-parton flux");
     desc.add("modelling", ParametersDescription()).setDescription("type of flux to use to build the grid");
-    desc.add("path", ""s).setDescription("path to the interpolation grid");
-    desc.add("wRange", Limits{1.e-9, 1.e3});
+    desc.add("path", "flux.grid"s).setDescription("path to the interpolation grid");
+    desc.add("checkHeader", true).setDescription("check the grid file header before parsing it?");
+    desc.add("wRange", Limits{1.e-9, 2.e3});
     desc.add("logW", true);
     desc.add<bool>("generateGrid", false).setDescription("(re-)generate the grid prior to run?");
-    desc.add<int>("numPoints", 100).setDescription("number of points to compute for the grid construction");
+    desc.add<int>("numPoints", 500).setDescription("number of points to compute for the grid construction");
     return desc;
   }
 
@@ -63,14 +104,23 @@ public:
 
 private:
   inline void buildGrid() {
-    const auto flux_algorithm = TwoPartonFluxFactory::get().build(parameters() + steer<ParametersList>("modelling"));
+    const auto modelling = steer<ParametersList>("modelling");
+    if (modelling.empty())
+      throw CG_FATAL("GridTwoPartonFlux:buildGrid") << "A parton flux modelling should be provided using the "
+                                                       "'modelling' parameter of this grid interpolator modelling.";
+    if (modelling.name() == "grid")
+      throw CG_FATAL("GridTwoPartonFlux:buildGrid") << "Cannot build a grid from a grid interpolator.";
+    const auto flux_algorithm = TwoPartonFluxFactory::get().build(parameters() + modelling);
     std::ofstream output_file(grid_path_, std::ios::out | std::ios::binary);
     epa::grid::Header header(params_);
     header.magic_number = header.goodMagic();
     cepgen::version::tag.copy(header.cepgen_version, 10);
     output_file.write(reinterpret_cast<char*>(&header), sizeof(epa::grid::Header));
     epa::grid::Value value;
-    for (const auto& w : steer<Limits>("wRange").generate(steer<int>("numPoints"), steer<bool>("logW"))) {
+    auto w_range = steer<Limits>("wRange").truncate(wgg_max_);
+    if (wgg_max_ > 0.)
+      w_range.max() = std::min(w_range.max(), wgg_max_);
+    for (const auto& w : w_range.generate(steer<int>("numPoints"), steer<bool>("logW"))) {
       value.w = w;
       value.flux = flux_algorithm->flux(w);
       CG_LOG << "Adding a flux value f(" << value.w << ") = " << value.flux << ".";
@@ -86,13 +136,12 @@ private:
       if (!file.is_open())
         throw CG_FATAL("GridTwoPartonFlux:loadGrid") << "Failed to load grid file \"" << grid_path_ << "\"!";
       file.read(reinterpret_cast<char*>(&header_), sizeof(epa::grid::Header));
-      if (header_.magic_number != epa::grid::Header::goodMagic() || header_ != expected_header)
+      if (header_.magic_number != epa::grid::Header::goodMagic() || (check_header_ && header_ != expected_header))
         throw CG_FATAL("GridTwoPartonFlux:loadGrid")
             << "Invalid grid read from file.\n"
-            << "          Expected header: " << expected_header << ".\n"
-            << "         Retrieved header: " << header_ << ",\n"
-            << "             Magic number: 0x" << std::hex << header_.magic_number << std::dec << ",\n"
-            << "  CepGen version for file: " << header_.cepgen_version << ".";
+            << "   Expected header: " << expected_header << ".\n"
+            << "  Retrieved header: " << header_ << ",\n"
+            << "      Magic number: 0x" << std::hex << header_.magic_number << std::dec << ".";
       epa::grid::Value value;
       while (!file.eof()) {
         file.read(reinterpret_cast<char*>(&value), sizeof(epa::grid::Value));
@@ -106,6 +155,7 @@ private:
   }
 
   const std::string grid_path_;
+  const bool check_header_;
   epa::grid::Header header_;
 };
 REGISTER_TWOPARTON_FLUX("grid", GridTwoPartonFlux);
