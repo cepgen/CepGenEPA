@@ -75,7 +75,7 @@ namespace cepgen {
       const auto central_weight = central_process_->matrixElement(m_w_central_);
       if (!utils::positive(central_weight))
         return 0.;
-      const auto fluxes_weight = partons_flux_->flux(m_w_central_);
+      const auto fluxes_weight = partons_flux_->flux({m_w_central_});
       if (!utils::positive(fluxes_weight))
         return 0.;
       return central_weight * fluxes_weight;

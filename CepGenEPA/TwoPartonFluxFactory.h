@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024  Laurent Forthomme
+ *  Copyright (C) 2024-2025  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@
 #include <CepGen/Modules/ModuleFactory.h>
 
 /// Add a generic collinear, two-parton flux evaluator builder definition
-#define REGISTER_TWOPARTON_FLUX(name, obj)                                        \
-  namespace cepgen {                                                              \
-    struct BUILDERNM(obj) {                                                       \
-      BUILDERNM(obj)() { TwoPartonFluxFactory::get().registerModule<obj>(name); } \
-    };                                                                            \
-    static const BUILDERNM(obj) gTwoPartonFlux##obj;                              \
-  }                                                                               \
+#define REGISTER_TWOPARTON_FLUX(name, obj)                                           \
+  namespace cepgen {                                                                 \
+    struct BUILDER_NAME(obj) {                                                       \
+      BUILDER_NAME(obj)() { TwoPartonFluxFactory::get().registerModule<obj>(name); } \
+    };                                                                               \
+    static const BUILDER_NAME(obj) gTwoPartonFlux##obj;                              \
+  }                                                                                  \
   static_assert(true, "")
 
 namespace cepgen::epa {

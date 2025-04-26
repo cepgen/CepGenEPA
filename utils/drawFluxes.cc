@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024  Laurent Forthomme
+ *  Copyright (C) 2024-2025  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -51,10 +51,10 @@ int main(int argc, char* argv[]) {
         cepgen::ParametersList().setName(modelling).set("checkHeader", false));
     auto& graph = graphs.emplace_back();
     for (const auto& wgg : range.generate(num_points, logx))
-      graph.addPoint(wgg, partons_flux->flux(wgg));
+      graph.addPoint(wgg, partons_flux->flux({wgg}));
     graph.setTitle(modelling);
-    graph.xAxis().setLabel("$w_{\\gamma\\gamma}$");
-    graph.yAxis().setLabel("$S_{\\gamma\\gamma}(w_{\\gamma\\gamma})$");
+    graph.xAxis().setLabel("$w_{\\gamma\\gamma}$ (GeV)");
+    graph.yAxis().setLabel("$S_{\\gamma\\gamma}$ (GeV${}^{-1}$)");
   }
 
   if (!plotter.empty()) {

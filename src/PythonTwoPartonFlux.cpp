@@ -1,7 +1,7 @@
 /*
  *  CepGen: a central exclusive processes event generator
  *  Copyright (C) 2023-2024  Hamzeh Khanpour
- *                2024       Laurent Forthomme
+ *                2024-2025  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ public:
     if (!functional_)
       throw CG_ERROR("PythonTwoPartonFlux") << "Failed to retrieve the functional '" << steer<std::string>("function")
                                             << "' from the Python environment.";
+    arguments_names_ = functional_->arguments();
   }
 
   static ParametersDescription description() {
@@ -58,20 +59,23 @@ public:
     return desc;
   }
 
-  double flux(double w) const override {
-    return functional_->operator()(std::vector<double>{w, eb1_, eb2_, q2range1_.max(), q2range2_.max()});
+  double flux(const std::vector<double>& arguments) const override {
+    return functional_->operator()(arguments);
+    //return functional_->operator()(std::vector<double>{w, eb1_, eb2_, q2range1_.max(), q2range2_.max()});
   }
 
   inline bool fragmenting() const override { return fragmenting_; }
-  inline pdgid_t partonPdgId() const override { return parton_pdg_id_; }
+  inline spdgid_t partonPdgId() const override { return parton_pdg_id_; }
   inline double mass2() const override { return 0.; }
 
 private:
   const python::Environment environment_;
   const bool fragmenting_;
-  const int parton_pdg_id_;
+  const spdgid_t parton_pdg_id_;
   const std::unique_ptr<python::Functional> functional_;
   const double eb1_, eb2_;
   const Limits q2range1_, q2range2_;
+  std::vector<std::string> arguments_names_;
+  mutable std::vector<double> arguments_;
 };
 REGISTER_TWOPARTON_FLUX("python", PythonTwoPartonFlux);

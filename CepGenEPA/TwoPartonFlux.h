@@ -34,8 +34,8 @@ namespace cepgen::epa {
       return desc;
     }
 
-    /// Compute the collinear flux for this central mass w
-    virtual double flux(double w) const = 0;
+    /// Compute the collinear flux for this phase space point
+    virtual double flux(const std::vector<double>&) const = 0;
 
     inline bool ktFactorised() const override final { return false; }
   };

@@ -60,10 +60,10 @@ public:
     return desc;
   }
 
-  double flux(double w) const override { return GridHandler<1, 1>::eval({w}).at(0); }
+  double flux(const std::vector<double>& arguments) const override { return GridHandler<1, 1>::eval(arguments).at(0); }
 
   inline bool fragmenting() const override { return header_.fragmenting; }
-  inline pdgid_t partonPdgId() const override { return header_.parton_pdg_id; }
+  inline spdgid_t partonPdgId() const override { return header_.parton_pdg_id; }
   inline double mass2() const override { return 0.; }
 
 private:
@@ -83,7 +83,7 @@ private:
     GridValue value;
     for (const auto& w : steer<Limits>("wRange").generate(steer<int>("numPoints"), steer<bool>("logW"))) {
       value.w = w;
-      value.flux = flux_algorithm->flux(w);
+      value.flux = flux_algorithm->flux({w});
       CG_DEBUG("GridTwoPartonFlux") << "Adding a flux value f(" << value.w << ") = " << value.flux << ".";
       output_file.write(reinterpret_cast<char*>(&value), sizeof(GridValue));
     }
