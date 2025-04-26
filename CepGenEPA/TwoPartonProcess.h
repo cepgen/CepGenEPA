@@ -34,6 +34,8 @@ namespace cepgen::epa {
       return desc;
     }
 
+    /// LaTeX-like description of the process
+    virtual std::string processDescription() const = 0;
     /// Compute the collinear matrix element for this central mass w
     virtual double matrixElement(double w) const = 0;
     /// Retrieve the list of particles produced in the process

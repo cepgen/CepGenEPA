@@ -40,6 +40,7 @@ public:
     return desc;
   }
 
+  std::string processDescription() const override { return "Python process"; }  //FIXME
   double matrixElement(double w) const override { return central_function_->operator()({w}); }
 
 private:
