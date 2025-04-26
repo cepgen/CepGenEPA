@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024  Laurent Forthomme
+ *  Copyright (C) 2024-2025  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@
 #include <CepGen/Modules/ModuleFactory.h>
 
 /// Add a generic collinear, two-parton matrix element builder implematation
-#define REGISTER_TWOPARTON_PROCESS(name, obj)                                        \
-  namespace cepgen {                                                                 \
-    struct BUILDERNM(obj) {                                                          \
-      BUILDERNM(obj)() { TwoPartonProcessFactory::get().registerModule<obj>(name); } \
-    };                                                                               \
-    static const BUILDERNM(obj) gTwoPartonProcess##obj;                              \
-  }                                                                                  \
+#define REGISTER_TWOPARTON_PROCESS(name, obj)                                           \
+  namespace cepgen {                                                                    \
+    struct BUILDER_NAME(obj) {                                                          \
+      BUILDER_NAME(obj)() { TwoPartonProcessFactory::get().registerModule<obj>(name); } \
+    };                                                                                  \
+    static const BUILDER_NAME(obj) gTwoPartonProcess##obj;                              \
+  }                                                                                     \
   static_assert(true, "")
 
 namespace cepgen::epa {
