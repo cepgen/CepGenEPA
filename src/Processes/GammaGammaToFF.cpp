@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024  Laurent Forthomme
+ *  Copyright (C) 2024-2025  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,36 +24,37 @@
 
 using namespace cepgen;
 
-class GammaGammaToLL : public epa::TwoPartonProcess {
+class GammaGammaToFF : public epa::TwoPartonProcess {
 public:
-  explicit GammaGammaToLL(const ParametersList& params)
-      : epa::TwoPartonProcess(params), ml_(steer<ParticleProperties>("lepton").mass), ml2_(ml_ * ml_) {}
+  explicit GammaGammaToFF(const ParametersList& params)
+      : epa::TwoPartonProcess(params),
+        fermion_properties_(steer<ParticleProperties>("fermion")),
+        min_w2_(std::pow(2. * fermion_properties_.mass, 2)),
+        prefactor_(4. * M_PI * constants::GEVM2_TO_PB * constants::ALPHA_EM * constants::ALPHA_EM *
+                   std::pow(fermion_properties_.integerCharge() / 3., 4) * fermion_properties_.colours) {}
 
   static ParametersDescription description() {
     auto desc = epa::TwoPartonProcess::description();
-    desc.setDescription("Two-photon production of lepton pair");
-    desc.add("lepton", 13);
+    desc.setDescription("Two-photon production of fermion pair");
+    desc.add("fermion", 13);
     return desc;
   }
 
-  std::string processDescription() const override { return "$\\gamma\\gamma\\to l^{+}l^{-}$"; }
+  std::string processDescription() const override { return "$\\gamma\\gamma\\to f\\bar{f}$"; }
   double matrixElement(double w) const override {
-    if (w < 2. * ml_)
+    const auto w2 = w * w;
+    if (w2 < min_w2_)
       return 0.;
-    const auto beta2 = 1. - 4. * ml2_ / w / w;
+    const auto beta2 = 1. - min_w2_ / w2;
     if (beta2 < 0.)
       return 0.;
     const auto beta = std::sqrt(beta2);
-    printf("%g->%g\n",
-           w,
-           prefactor_ / w / w * beta * (3. - beta2 * beta2) / (2 * beta) * std::log((1. + beta) / (1. - beta)) - 2 +
-               beta2);
-    return prefactor_ / w / w * beta * (3. - beta2 * beta2) / (2 * beta) * std::log((1. + beta) / (1. - beta)) - 2 +
-           beta2;
+    return prefactor_ / w2 * beta * (3. - beta2 * beta2) / (2 * beta) * std::log((1. + beta) / (1. - beta)) - 2 + beta2;
   }
 
 private:
-  static constexpr double prefactor_ = 4. * M_PI * constants::GEVM2_TO_PB * constants::ALPHA_EM * constants::ALPHA_EM;
-  const double ml_, ml2_;
+  const ParticleProperties fermion_properties_;
+  const double min_w2_;
+  const double prefactor_;
 };
-REGISTER_TWOPARTON_PROCESS("gammagammatoll", GammaGammaToLL);
+REGISTER_TWOPARTON_PROCESS("gammagammatoff", GammaGammaToFF);
