@@ -17,7 +17,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <CepGen/Modules/CouplingFactory.h>
 #include <CepGen/Physics/Constants.h>
+#include <CepGen/Physics/Coupling.h>
 #include <CepGen/Physics/PDG.h>
 
 #include "CepGenEPA/TwoPartonProcess.h"
@@ -29,6 +31,7 @@ class GammaGammaToWW : public epa::TwoPartonProcess {
 public:
   explicit GammaGammaToWW(const ParametersList& params)
       : epa::TwoPartonProcess(params),
+        alpha_em_(AlphaEMFactory::get().build(steer<ParametersList>("alphaEM"))),
         me_(PDG::get().mass(PDG::electron)),
         mw_(PDG::get().mass(24)),
         inv_mw2_(1. / mw_ / mw_) {}
@@ -36,21 +39,24 @@ public:
   static ParametersDescription description() {
     auto desc = epa::TwoPartonProcess::description();
     desc.setDescription("Two-photon production of W boson pair");
+    desc.add("alphaEM", AlphaEMFactory::get().describeParameters("burkhardt"));
     return desc;
   }
 
   std::string processDescription() const override { return "$\\gamma\\gamma\\to W^{+}W^{-}$"; }
   double matrixElement(double wgg) const override {
-    const auto alpha2 = 1. / 128. / 128.;
-    if (wgg > 2. * mw_)
-      return (19. / 2.) * M_PI * constants::GEVM2_TO_PB * alpha2 * inv_mw2_ * std::sqrt(wgg * wgg - 4. / inv_mw2_) /
-             wgg;
-    if (wgg > 300.)
-      return 8. * M_PI * constants::GEVM2_TO_PB * alpha2 * inv_mw2_;
+    const auto alpha_em = alpha_em_->operator()(wgg);
+    if (wgg > 2. * mw_) {
+      if (wgg > 300.)
+        return 2. * prefactor_ * alpha_em * alpha_em * inv_mw2_;
+      return (19. / 8.) * prefactor_ * alpha_em * alpha_em * inv_mw2_ * std::sqrt(wgg * wgg - 4. / inv_mw2_) / wgg;
+    }
     return 0.;
   }
 
 private:
+  static constexpr double prefactor_ = 4. * M_PI * constants::GEVM2_TO_PB;
+  const std::unique_ptr<Coupling> alpha_em_;
   const double me_;
   const double mw_;
   const double inv_mw2_;
