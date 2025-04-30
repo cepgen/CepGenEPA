@@ -18,10 +18,16 @@ process = cepgen.Module('epa',
         ),
         partonsFlux = cepgen.Module('grid',
             modelling = cepgen.Module('python',
-                function = 'Syy.flux_el_yy_atW',
+                function = 'Integrated_elastic_tau_tau_cross_section_final_version.flux_el_yy_atW',
+                beam1 = cepgen.Parameters(
+                    energy = 50.,
+                ),
+                beam2 = cepgen.Parameters(
+                    energy = 7000.,
+                ),
             ),
             path = 'flux.grid',
-            #generateGrid = True,
+            #generateGrid = True,  # force the grid (re-)computation
         ),
     ),
     inKinematics = cepgen.Parameters(
