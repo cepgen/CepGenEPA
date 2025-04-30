@@ -34,7 +34,7 @@ public:
         environment_(steer<ParametersList>("environment")),
         fragmenting_(steer<bool>("fragmenting")),
         parton_pdg_id_(steer<int>("partonPdgId")),
-        functional_(python::functional(steer<std::string>("function"))),
+        functional_(python::make_functional(steer<std::string>("function"))),
         eb1_(steer<double>("eb1")),
         eb2_(steer<double>("eb2")),
         q2range1_(steer<Limits>("q2Range1")),

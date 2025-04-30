@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024  Laurent Forthomme
+ *  Copyright (C) 2024-2025  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 #include <CepGenPython/ObjectPtr.h>
 
 namespace cepgen::python {
-  std::unique_ptr<Functional> functional(const std::string& python_name) {
+  std::unique_ptr<Functional> make_functional(const std::string& python_name) {
     const auto module_path = python_name.substr(0, python_name.rfind('.')),
                function_path = python_name.substr(python_name.rfind('.') + 1);
     if (auto mod = ObjectPtr::importModule(module_path); mod) {
@@ -35,6 +35,6 @@ namespace cepgen::python {
       throw PY_ERROR << "Failed to retrieve a function '" << function_path << "' from Python module '" << module_path
                      << "'.";
     }
-    throw PY_ERROR << "Failed to import Python module '" << module_path << "'.";
+    throw PY_ERROR << "Failed to import Python function '" << function_path << "' from module '" << module_path << "'.";
   }
 }  // namespace cepgen::python

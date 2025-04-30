@@ -31,7 +31,7 @@ public:
   explicit PythonTwoPartonProcess(const ParametersList& params)
       : epa::TwoPartonProcess(params),
         environment_(steer<ParametersList>("environment")),
-        central_function_(python::functional(steer<std::string>("function"))) {}
+        central_function_(python::make_functional(steer<std::string>("function"))) {}
 
   static ParametersDescription description() {
     auto desc = epa::TwoPartonProcess::description();

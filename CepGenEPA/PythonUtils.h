@@ -25,7 +25,7 @@
 namespace cepgen::python {
   class Functional;
 
-  std::unique_ptr<Functional> functional(const std::string& python_name);
+  std::unique_ptr<Functional> make_functional(const std::string& python_name);
 }  // namespace cepgen::python
 
 #endif
