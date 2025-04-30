@@ -98,9 +98,10 @@ public:
     return flux_wgg;
   }
 
+  inline std::pair<spdgid_t, spdgid_t> partons() const override {
+    return std::make_pair(lepton_.flux->partonPdgId(), proton_.flux->partonPdgId());
+  }
   inline bool fragmenting() const override { return false; }
-  inline spdgid_t partonPdgId() const override { return PDG::photon; }
-  inline double mass2() const override { return 0.; }
 
 private:
   static const double q2min(double x, double mass2) { return mass2 * x * x / (1. - x); }
