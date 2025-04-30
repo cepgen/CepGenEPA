@@ -39,11 +39,9 @@ public:
       : epa::TwoPartonFlux(params),
         lepton_(steer<ParametersList>("lepton")),
         proton_(steer<ParametersList>("proton")),
-        integrator1_(IntegratorFactory::get().build(steer<ParametersList>("fastIntegrator"))),
-        integrator2_(IntegratorFactory::get().build(steer<ParametersList>("fastIntegrator"))),
-        integrator3_(IntegratorFactory::get().build(steer<ParametersList>("fastIntegrator"))) {
-    CG_LOG << description();
-  }
+        total_flux_integrator_(IntegratorFactory::get().build(steer<ParametersList>("fastIntegrator"))),
+        lepton_flux_integrator_(IntegratorFactory::get().build(steer<ParametersList>("fastIntegrator"))),
+        proton_flux_integrator_(IntegratorFactory::get().build(steer<ParametersList>("fastIntegrator"))) {}
 
   static ParametersDescription description() {
     auto desc = epa::TwoPartonFlux::description();
@@ -66,17 +64,17 @@ public:
     proton_desc.add("q2Range", Limits{0., 10.});
     desc.add("proton", proton_desc);
 
-    desc.add("fastIntegrator", IntegratorFactory::get().describeParameters("gsl"));
+    desc.add("fastIntegrator", IntegratorFactory::get().describeParameters("root"));
     desc.add("preciseIntegrator", IntegratorFactory::get().describeParameters("Vegas"));
     return desc;
   }
 
   double flux(const std::vector<double>& arguments) const override {
     const auto& wgg = arguments.at(0);
-    const auto flux_wgg = integrator1_->integrate(
+    const auto flux_wgg = total_flux_integrator_->integrate(
         [this, &wgg](double x1) -> double {
           if (const auto q2min_e = q2min(x1, lepton_.flux->mass2()); q2min_e < lepton_.q2range.max()) {
-            return integrator2_->integrate(
+            return lepton_flux_integrator_->integrate(
                 [this, &wgg, &x1](double q2_1) {
                   const auto eb1sq = lepton_.energy * lepton_.energy;
                   // the tricky part is that x2 is constrained by s, and x1!
@@ -86,7 +84,7 @@ public:
                        proton_.energy * std::sqrt(x1 * x1 * eb1sq + q2_1) * (1. - q2_1 / (2. * eb1sq * (1. - x1))));
                   if (const auto q2min_p = q2min(x2, proton_.flux->mass2()); q2min_p < proton_.q2range.max())
                     return lepton_.flux->fluxQ2(x1, q2_1) / q2_1 / x1 *
-                           integrator3_->integrate(
+                           proton_flux_integrator_->integrate(
                                [this, &x2](double q2_2) { return proton_.flux->fluxQ2(x2, q2_2) / q2_2 / x2; },
                                proton_.q2range);
                   return 0.;
@@ -129,8 +127,8 @@ private:
 
   const BeamProperties lepton_;
   const BeamProperties proton_;
-  const std::unique_ptr<Integrator> integrator1_;
-  const std::unique_ptr<Integrator> integrator2_;
-  const std::unique_ptr<Integrator> integrator3_;
+  const std::unique_ptr<Integrator> total_flux_integrator_;
+  const std::unique_ptr<Integrator> lepton_flux_integrator_;
+  const std::unique_ptr<Integrator> proton_flux_integrator_;
 };
 REGISTER_TWOPARTON_FLUX("gmgm:lp", LeptonProtonTwoPhotonFlux);
