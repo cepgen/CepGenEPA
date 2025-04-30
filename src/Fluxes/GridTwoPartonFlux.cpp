@@ -19,6 +19,7 @@
 
 #include <CepGen/Core/Exception.h>
 #include <CepGen/Core/ParametersList.h>
+#include <CepGen/Utils/Filesystem.h>
 #include <CepGen/Utils/GridHandler.h>
 #include <CepGen/Utils/Timer.h>
 #include <CepGen/Version.h>
@@ -40,11 +41,11 @@ public:
   explicit GridTwoPartonFlux(const ParametersList& params)
       : epa::TwoPartonFlux(params),
         GridHandler(GridType::linear),
-        grid_path_(steerPath("path").empty() ? "flux.grid" : steerPath("path")),
+        grid_path_(steerPath("path")),
         check_header_(steer<bool>("checkHeader")),
         header_(params_) {
-    if (steer<bool>("generateGrid") || steerPath("path").empty())  // grid is not provided by the user ; build it
-      buildGrid();
+    if (steer<bool>("generateGrid") || grid_path_.empty() || !utils::fileExists(grid_path_))
+      buildGrid();  // grid is not provided by the user, or is empty; build it
     loadGrid();
   }
 
@@ -60,7 +61,7 @@ public:
     return desc;
   }
 
-  double flux(const std::vector<double>& arguments) const override { return GridHandler<1, 1>::eval(arguments).at(0); }
+  double flux(double w) const override { return GridHandler<1, 1>::eval({w}).at(0); }
 
   inline bool fragmenting() const override { return header_.fragmenting; }
   inline std::pair<spdgid_t, spdgid_t> partons() const override {
@@ -75,7 +76,9 @@ private:
                                                        "'modelling' parameter of this grid interpolator modelling.";
     if (modelling.name() == "grid")
       throw CG_FATAL("GridTwoPartonFlux:buildGrid") << "Cannot build a grid from a grid interpolator.";
-    const auto flux_algorithm = TwoPartonFluxFactory::get().build(parameters() + modelling);
+    const auto flux_algorithm = TwoPartonFluxFactory::get().build(modelling);
+    CG_DEBUG("GridTwoPartonFlux:buildGrid")
+        << "Successfully built a '" << flux_algorithm->parameters() << "' modelling to populate the grid.";
     std::ofstream output_file(grid_path_, std::ios::out | std::ios::binary);
     GridHeader header(params_);
     header.magic_number = header.goodMagic();
