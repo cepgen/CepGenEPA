@@ -1,7 +1,7 @@
 /*
  *  CepGen: a central exclusive processes event generator
  *  Copyright (C) 2023-2024  Hamzeh Khanpour
- *                2024       Laurent Forthomme
+ *                2024-2025  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ class GridTwoPartonFlux final : public epa::TwoPartonFlux, private GridHandler<1
 public:
   explicit GridTwoPartonFlux(const ParametersList& params)
       : epa::TwoPartonFlux(params),
-        GridHandler<1, 1>(GridType::linear),
+        GridHandler(GridType::linear),
         grid_path_(steerPath("path").empty() ? "flux.grid" : steerPath("path")),
         check_header_(steer<bool>("checkHeader")),
         header_(params_) {
@@ -55,16 +55,17 @@ public:
     desc.add("path", "flux.grid"s).setDescription("path to the interpolation grid");
     desc.add("checkHeader", true).setDescription("check the grid file header before parsing it?");
     desc.add("logW", true);
-    desc.add<bool>("generateGrid", false).setDescription("(re-)generate the grid prior to run?");
-    desc.add<int>("numPoints", 500).setDescription("number of points to compute for the grid construction");
+    desc.add("generateGrid", false).setDescription("(re-)generate the grid prior to run?");
+    desc.add("numPoints", 500).setDescription("number of points to compute for the grid construction");
     return desc;
   }
 
   double flux(const std::vector<double>& arguments) const override { return GridHandler<1, 1>::eval(arguments).at(0); }
 
   inline bool fragmenting() const override { return header_.fragmenting; }
-  inline spdgid_t partonPdgId() const override { return header_.parton_pdg_id; }
-  inline double mass2() const override { return 0.; }
+  inline std::pair<spdgid_t, spdgid_t> partons() const override {
+    return std::make_pair(header_.parton1, header_.parton2);
+  }
 
 private:
   inline void buildGrid() {
@@ -121,19 +122,21 @@ private:
           q2max1(params.get<double>("q2max1")),
           q2max2(params.get<double>("q2max2")),
           fragmenting(params.get<bool>("fragmenting")),
-          parton_pdg_id(params.get<int>("partonPdgId")) {}
+          parton1(params.get<int>("parton1")),
+          parton2(params.get<int>("parton2")) {}
 
     static int goodMagic() { return 0xdeadb33f; }
     bool operator==(const GridHeader& oth) const {
       // skip test of cepgen version
       return magic_number == oth.magic_number && eb1 == oth.eb1 && eb2 == oth.eb2 && q2max1 == oth.q2max1 &&
-             q2max2 == oth.q2max2 && fragmenting == oth.fragmenting && parton_pdg_id == oth.parton_pdg_id;
+             q2max2 == oth.q2max2 && fragmenting == oth.fragmenting && parton1 == oth.parton1 && parton2 == oth.parton2;
     }
     bool operator!=(const GridHeader& oth) const { return !(*this == oth); }
     friend std::ostream& operator<<(std::ostream& os, const GridHeader& header) {
       return os << "GridHeader{eb1:" << header.eb1 << ", eb2:" << header.eb2 << ", q2max1:" << header.q2max1
                 << ", q2max2:" << header.q2max2 << ", fragmenting:" << std::boolalpha << header.fragmenting
-                << ", parton PDGid:" << header.parton_pdg_id << ", CepGen version:'" << header.cepgen_version << "'}";
+                << ", partons PDG ids:" << header.parton1 << ":" << header.parton2 << ", CepGen version:'"
+                << header.cepgen_version << "'}";
     }
 
     int magic_number;
@@ -141,7 +144,7 @@ private:
     double eb1, eb2;
     double q2max1, q2max2;
     bool fragmenting;
-    int parton_pdg_id;
+    int parton1, parton2;
   } header_;
   struct GridValue {
     double w, flux;

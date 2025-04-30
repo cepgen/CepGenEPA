@@ -65,8 +65,9 @@ public:
   }
 
   inline bool fragmenting() const override { return fragmenting_; }
-  inline spdgid_t partonPdgId() const override { return parton_pdg_id_; }
-  inline double mass2() const override { return 0.; }
+  inline std::pair<spdgid_t, spdgid_t> partons() const override {
+    return std::make_pair(parton_pdg_id_, parton_pdg_id_);
+  }
 
 private:
   const python::Environment environment_;

@@ -34,10 +34,13 @@ namespace cepgen::epa {
       return desc;
     }
 
-    /// Compute the collinear flux for this phase space point
-    virtual double flux(const std::vector<double>&) const = 0;
+    virtual std::pair<spdgid_t, spdgid_t> partons() const = 0;  ///< List of partons emitted by the two-beam system
+    virtual double flux(const std::vector<double>&) const = 0;  ///< Compute the collinear flux for this point
 
-    inline bool ktFactorised() const override final { return false; }
+    // replace all PartonFlux pure virtual (and unused) attributes
+    inline bool ktFactorised() const final { return false; }
+    inline spdgid_t partonPdgId() const final { return 0; }
+    inline double mass2() const final { return 0.; }
   };
 }  // namespace cepgen::epa
 
