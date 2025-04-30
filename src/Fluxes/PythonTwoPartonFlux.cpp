@@ -59,9 +59,11 @@ public:
     return desc;
   }
 
-  double flux(const std::vector<double>& arguments) const override {
-    return functional_->operator()(arguments);
-    //return functional_->operator()(std::vector<double>{w, eb1_, eb2_, q2range1_.max(), q2range2_.max()});
+  double flux(double w) const override {
+    std::vector<double> arguments{w};
+    const auto res = functional_->operator()(arguments);
+    CG_DEBUG("PythonTwoPartonFlux:flux") << "Flux computed for arguments=" << arguments << ": " << res << ".";
+    return res;
   }
 
   inline bool fragmenting() const override { return fragmenting_; }
@@ -77,6 +79,5 @@ private:
   const double eb1_, eb2_;
   const Limits q2range1_, q2range2_;
   std::vector<std::string> arguments_names_;
-  mutable std::vector<double> arguments_;
 };
 REGISTER_TWOPARTON_FLUX("python", PythonTwoPartonFlux);

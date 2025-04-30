@@ -35,7 +35,7 @@ namespace cepgen::epa {
     }
 
     virtual std::pair<spdgid_t, spdgid_t> partons() const = 0;  ///< List of partons emitted by the two-beam system
-    virtual double flux(const std::vector<double>&) const = 0;  ///< Compute the collinear flux for this point
+    virtual double flux(double w) const = 0;                    ///< Compute the collinear flux for this point
 
     // replace all PartonFlux pure virtual (and unused) attributes
     inline bool ktFactorised() const final { return false; }
