@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 project(CepGenEPA)
-set(CEPGEN_PATH ${CEPGEN_PATH} $ENV{CEPGEN_PATH})
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CEPGEN_PATH}/cmake ${CEPGEN_PATH}/share/cmake ${CEPGEN_PATH}/build/cmake)
 
+set(CEPGEN_PATH ${CEPGEN_PATH} $ENV{CEPGEN_PATH})
+#set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CEPGEN_PATH}/cmake)
+set(CMAKE_MODULE_PATH ${CEPGEN_PATH}/cmake ${CEPGEN_PATH}/share/cmake)
+
+find_package(CepGen COMPONENTS CepGen python REQUIRED)
 find_package(GSL REQUIRED)
 find_package(Boost COMPONENTS system python REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
-find_package(CepGen COMPONENTS python REQUIRED)
 
 file(GLOB sources src/Fluxes/*.cpp src/Modules/*.cpp src/Processes/*.cpp src/Utils/*.cpp)
 file(GLOB utils_sources utils/*.cc)

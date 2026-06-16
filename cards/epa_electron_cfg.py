@@ -26,7 +26,7 @@ process = cepgen.Module('epa',
                     energy = 7000.,
                 ),
             ),
-            path = 'flux.grid',
+            path = 'flux_ep_50gev_7tev_elastic.grid',
             #generateGrid = True,  # force the grid (re-)computation
         ),
     ),

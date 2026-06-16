@@ -87,9 +87,9 @@ private:
     GridValue value;
     for (const auto& w : steer<Limits>("wRange").generate(steer<int>("numPoints"), steer<bool>("logW"))) {
       value.w = w;
-      value.flux = flux_algorithm->flux({w});
-      CG_DEBUG("GridTwoPartonFlux") << "Adding a flux value f(" << value.w << ") = " << value.flux << ".";
+      value.flux = flux_algorithm->flux(w);
       output_file.write(reinterpret_cast<char*>(&value), sizeof(GridValue));
+      CG_DEBUG("GridTwoPartonFlux") << "Adding a flux value f(" << value.w << ") = " << value.flux << ".";
     }
   }
   inline void loadGrid() {
