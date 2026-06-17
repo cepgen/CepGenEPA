@@ -1,13 +1,13 @@
 #ifndef ggMatrixElements_MatrixElements_h
 #define ggMatrixElements_MatrixElements_h
 
+#include <complex>
+
 namespace sm_aaaa {
-  void me_SM(void (*me)(double, double, double *, double *, int),
-             double s,
-             double t,
-             double *re,
-             double *im,
-             bool exclude_loops = false);
+  std::complex<double> me_SM(std::complex<double> (*me)(double, double, int),
+                             double s,
+                             double t,
+                             bool exclude_loops = false);
   double sqme(double s, double t, bool exclude_loops = false);
 }  // namespace sm_aaaa
 

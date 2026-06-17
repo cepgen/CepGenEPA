@@ -4,33 +4,35 @@
 #ifndef ggMatrixElements_HelicityAmplitudes_h
 #define ggMatrixElements_HelicityAmplitudes_h
 
+#include <complex>
+
 int limits(double sred, double tred);
 
-void Mxxxx_fermion(double x, double y, double *re, double *im);
-void Mpppp_fermion(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mpmmp_fermion(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mpmpm_fermion(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mpppm_fermion(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mppmm_fermion(double sred, double tred, double *re, double *im, int exclude_loops);
+std::complex<double> Mxxxx_fermion(double x, double y);
+std::complex<double> Mpppp_fermion(double sred, double tred, int exclude_loops);
+std::complex<double> Mpmmp_fermion(double sred, double tred, int exclude_loops);
+std::complex<double> Mpmpm_fermion(double sred, double tred, int exclude_loops);
+std::complex<double> Mpppm_fermion(double sred, double tred, int exclude_loops);
+std::complex<double> Mppmm_fermion(double sred, double tred, int exclude_loops);
 
-void Mxxxx_vector(double x, double y, double *re, double *im);
-void Mpppp_vector(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mpmmp_vector(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mpmpm_vector(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mpppm_vector(double sred, double tred, double *re, double *im, int exclude_loops);
-void Mppmm_vector(double sred, double tred, double *re, double *im, int exclude_loops);
+std::complex<double> Mxxxx_vector(double x, double y);
+std::complex<double> Mpppp_vector(double sred, double tred, int exclude_loops);
+std::complex<double> Mpmmp_vector(double sred, double tred, int exclude_loops);
+std::complex<double> Mpmpm_vector(double sred, double tred, int exclude_loops);
+std::complex<double> Mpppm_vector(double sred, double tred, int exclude_loops);
+std::complex<double> Mppmm_vector(double sred, double tred, int exclude_loops);
 
-void Mxxxx_spin0even(double x, double y, double m, double f0, double w_const, double a2, double *re, double *im);
-void Mpppp_spin0even(double x, double y, double m, double f0, double w_const, double a2, double *re, double *im);
-void Mpmmp_spin0even(double x, double y, double m, double f0, double w_const, double a2, double *re, double *im);
-void Mpmpm_spin0even(double x, double y, double m, double f0, double w_const, double a2, double *re, double *im);
-void Mppmm_spin0even(double x, double y, double m, double f0, double w_const, double a2, double *re, double *im);
-void Mpppm_spin0even(double x, double y, double m, double f0, double w_const, double a2, double *re, double *im);
+std::complex<double> Mxxxx_spin0even(double x, double y, double m, double f0, double w_const, double a2);
+std::complex<double> Mpppp_spin0even(double x, double y, double m, double f0, double w_const, double a2);
+std::complex<double> Mpmmp_spin0even(double x, double y, double m, double f0, double w_const, double a2);
+std::complex<double> Mpmpm_spin0even(double x, double y, double m, double f0, double w_const, double a2);
+std::complex<double> Mppmm_spin0even(double x, double y, double m, double f0, double w_const, double a2);
+std::complex<double> Mpppm_spin0even(double x, double y, double m, double f0, double w_const, double a2);
 
-void Mpppp_eft(double zeta1, double zeta2, double s, double t, double *re, double *im);
-void Mpmmp_eft(double zeta1, double zeta2, double s, double t, double *re, double *im);
-void Mpmpm_eft(double zeta1, double zeta2, double s, double t, double *re, double *im);
-void Mppmm_eft(double zeta1, double zeta2, double s, double t, double *re, double *im);
-void Mpppm_eft(double zeta1, double zeta2, double s, double t, double *re, double *im);
+std::complex<double> Mpppp_eft(double zeta1, double zeta2, double s, double t);
+std::complex<double> Mpmmp_eft(double zeta1, double zeta2, double s, double t);
+std::complex<double> Mpmpm_eft(double zeta1, double zeta2, double s, double t);
+std::complex<double> Mppmm_eft(double zeta1, double zeta2, double s, double t);
+std::complex<double> Mpppm_eft(double zeta1, double zeta2, double s, double t);
 
 #endif

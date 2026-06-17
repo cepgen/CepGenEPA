@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024-2025  Laurent Forthomme
+ *  Copyright (C) 2024-2026  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,11 +22,6 @@
 #include <CepGen/Physics/Constants.h>
 #include <CepGen/Physics/PDG.h>
 
-#include <array>
-#include <cassert>
-#include <cmath>
-#include <stdexcept>
-
 #include "CepGenEPA/HelicityAmplitudes.h"
 #include "CepGenEPA/MatrixElements.h"
 #include "CepGenEPA/TwoPartonProcess.h"
@@ -41,62 +36,46 @@ namespace eft_aaaa {
     if (s < 0 || t > 0 || t < -s)
       throw CG_FATAL("eft_aaaa:sqme") << "Invalid domain. Valid range is s>=0 and -s<=t<=0.";
 
-    double re_ex;
-    double im_ex;
-    double re_SM;
-    double im_SM;
-
     double value = 0;
 
-    // Mpppp:
-    Mpppp_eft(zeta1, zeta2, s, t, &re_ex, &im_ex);  // exotic matrix element
-    re_ex *= 8;  // factor 8 is needed because of the conventions in Costantini, DeTollis, Pistoni
-    im_ex *= 8;
-    sm_aaaa::me_SM(Mpppp_fermion, s, t, &re_SM, &im_SM, exclude_loops_SM);  //  SM matrix element:
-
-    value += re_ex * (re_ex + 2 * re_SM) + im_ex * (im_ex + 2 * im_SM);
-
-    // repeat for the other helicities
-
-    // Mppmm:
-    Mppmm_eft(zeta1, zeta2, s, t, &re_ex, &im_ex);
-    re_ex *= 8;
-    im_ex *= 8;
-    sm_aaaa::me_SM(Mppmm_fermion, s, t, &re_SM, &im_SM, exclude_loops_SM);
-
-    value += re_ex * (re_ex + 2 * re_SM) + im_ex * (im_ex + 2 * im_SM);
-
-    // Mpmmp:
-    Mpmmp_eft(zeta1, zeta2, s, t, &re_ex, &im_ex);
-    re_ex *= 8;
-    im_ex *= 8;
-    sm_aaaa::me_SM(Mpmmp_fermion, s, t, &re_SM, &im_SM, exclude_loops_SM);
-
-    value += re_ex * (re_ex + 2 * re_SM) + im_ex * (im_ex + 2 * im_SM);
-
-    // Mpmpm:
-    Mpmpm_eft(zeta1, zeta2, s, t, &re_ex, &im_ex);
-    re_ex *= 8;
-    im_ex *= 8;
-    sm_aaaa::me_SM(Mpmpm_fermion, s, t, &re_SM, &im_SM, exclude_loops_SM);
-
-    value += re_ex * (re_ex + 2 * re_SM) + im_ex * (im_ex + 2 * im_SM);
-
-    // Mpppm
-    Mpppm_eft(zeta1, zeta2, s, t, &re_ex, &im_ex);
-    re_ex *= 8;
-    im_ex *= 8;
-    sm_aaaa::me_SM(Mpppm_fermion, s, t, &re_SM, &im_SM, exclude_loops_SM);
-
-    value += 4 * (re_ex * (re_ex + 2 * re_SM) + im_ex * (im_ex + 2 * im_SM));
-
+    {  // Mpppp:
+      // factor 8 is needed because of the conventions in Costantini, DeTollis, Pistoni
+      const auto me_ex = 8. * Mpppp_eft(zeta1, zeta2, s, t);                     // exotic matrix element
+      const auto me_sm = sm_aaaa::me_SM(Mpppp_fermion, s, t, exclude_loops_SM);  //  SM matrix element
+      value += std::real(me_ex) * (std::real(me_ex) + 2 * std::real(me_sm)) +
+               std::imag(me_ex) * (std::imag(me_ex) + 2 * std::imag(me_sm));
+    }
+    {  // Mppmm:
+      const auto me_ex = 8. * Mppmm_eft(zeta1, zeta2, s, t);
+      const auto me_sm = sm_aaaa::me_SM(Mppmm_fermion, s, t, exclude_loops_SM);
+      value += std::real(me_ex) * (std::real(me_ex) + 2 * std::real(me_sm)) +
+               std::imag(me_ex) * (std::imag(me_ex) + 2 * std::imag(me_sm));
+    }
+    {  // Mpmmp:
+      const auto me_ex = 8. * Mpmmp_eft(zeta1, zeta2, s, t);
+      const auto me_sm = sm_aaaa::me_SM(Mpmmp_fermion, s, t, exclude_loops_SM);
+      value += std::real(me_ex) * (std::real(me_ex) + 2 * std::real(me_sm)) +
+               std::imag(me_ex) * (std::imag(me_ex) + 2 * std::imag(me_sm));
+    }
+    {  // Mpmpm:
+      const auto me_ex = 8. * Mpmpm_eft(zeta1, zeta2, s, t);
+      const auto me_sm = sm_aaaa::me_SM(Mpmpm_fermion, s, t, exclude_loops_SM);
+      value += std::real(me_ex) * (std::real(me_ex) + 2 * std::real(me_sm)) +
+               std::imag(me_ex) * (std::imag(me_ex) + 2 * std::imag(me_sm));
+    }
+    {  // Mpppm
+      const auto me_ex = 8. * Mpppm_eft(zeta1, zeta2, s, t);
+      const auto me_sm = sm_aaaa::me_SM(Mpppm_fermion, s, t, exclude_loops_SM);
+      value += std::real(me_ex) * (std::real(me_ex) + 2 * std::real(me_sm)) +
+               std::imag(me_ex) * (std::imag(me_ex) + 2 * std::imag(me_sm));
+    }
     return 0.5 * value;
   }
 }  //namespace eft_aaaa
 
 class GammaGammaToGammaGammaEFT : public epa::TwoPartonProcess {
 public:
-  explicit GammaGammaToGammaGammaEFT(const ParametersList &params)
+  explicit GammaGammaToGammaGammaEFT(const ParametersList& params)
       : epa::TwoPartonProcess(params),
         integrator_(IntegratorFactory::get().build(steer<ParametersList>("integrator"))),
         exclude_loops_(steer<bool>("excludeLoops")),
