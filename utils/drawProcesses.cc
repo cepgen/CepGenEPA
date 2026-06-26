@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024-2025  Laurent Forthomme
+ *  Copyright (C) 2024-2026  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ using namespace std;
 int main(int argc, char* argv[]) {
   vector<string> modellings;
   string plotter;
-  cepgen::Limits range;
+  cepgen::Limits x_range, y_range;
   int num_points;
   bool logx, logy, draw_grid;
   cepgen::initialise();
@@ -38,7 +38,8 @@ int main(int argc, char* argv[]) {
       .addOptionalArgument(
           "modellings,m", "process modellings", &modellings, cepgen::TwoPartonProcessFactory::get().modules())
       .addOptionalArgument("plotter,p", "type of plotter to user", &plotter, "")
-      .addOptionalArgument("range,r", "x-axis range", &range, cepgen::Limits{1.e-6, 1000.})
+      .addOptionalArgument("range,r", "x-axis range", &x_range, cepgen::Limits{1.e-6, 1000.})
+      .addOptionalArgument("y-range,y", "y-axis range", &y_range, cepgen::Limits{})
       .addOptionalArgument("num-points,n", "number of points to plot", &num_points, 100)
       .addOptionalArgument("logx", "logarithmic x-scale", &logx, false)
       .addOptionalArgument("logy,l", "logarithmic y-scale", &logy, false)
@@ -49,11 +50,13 @@ int main(int argc, char* argv[]) {
   for (const auto& modelling : modellings) {
     const auto process = cepgen::TwoPartonProcessFactory::get().build(cepgen::ParametersList().setName(modelling));
     auto& graph = graphs.emplace_back();
-    for (const auto& wgg : range.generate(num_points, logx))
+    for (const auto& wgg : x_range.generate(num_points, logx))
       graph.addPoint(wgg, process->matrixElement(wgg));
     graph.setTitle(process->processDescription());
     graph.xAxis().setLabel("$w_{\\gamma\\gamma}$ (GeV)");
     graph.yAxis().setLabel("$\\sigma_{\\gamma\\gamma}$ (pb)");
+    if (y_range.valid())
+      graph.yAxis().setRange(y_range);
   }
 
   if (!plotter.empty()) {

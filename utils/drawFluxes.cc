@@ -1,6 +1,6 @@
 /*
  *  CepGen: a central exclusive processes event generator
- *  Copyright (C) 2024-2025  Laurent Forthomme
+ *  Copyright (C) 2024-2026  Laurent Forthomme
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include <CepGen/Utils/ArgumentsParser.h>
 #include <CepGen/Utils/Drawer.h>
 #include <CepGen/Utils/Graph.h>
+#include <CepGen/Utils/Message.h>
 
 #include "CepGenEPA/TwoPartonFlux.h"
 #include "CepGenEPA/TwoPartonFluxFactory.h"
@@ -30,7 +31,7 @@ using namespace std;
 int main(int argc, char* argv[]) {
   vector<string> modellings;
   string plotter;
-  cepgen::Limits range;
+  cepgen::Limits x_range, y_range;
   int num_points;
   bool logx, logy, draw_grid;
   cepgen::initialise();
@@ -38,7 +39,8 @@ int main(int argc, char* argv[]) {
       .addOptionalArgument(
           "modellings,m", "flux modellings", &modellings, cepgen::TwoPartonFluxFactory::get().modules())
       .addOptionalArgument("plotter,p", "type of plotter to user", &plotter, "")
-      .addOptionalArgument("range,r", "x-axis range", &range, cepgen::Limits{1.e-6, 1000.})
+      .addOptionalArgument("range,r", "x-axis range", &x_range, cepgen::Limits{1.e-6, 1000.})
+      .addOptionalArgument("y-range,y", "y-axis range", &y_range, cepgen::Limits{})
       .addOptionalArgument("num-points,n", "number of points to plot", &num_points, 100)
       .addOptionalArgument("logx", "logarithmic x-scale", &logx, false)
       .addOptionalArgument("logy,l", "logarithmic y-scale", &logy, false)
@@ -50,11 +52,16 @@ int main(int argc, char* argv[]) {
     const auto partons_flux = cepgen::TwoPartonFluxFactory::get().build(
         cepgen::ParametersList().setName(modelling).set("checkHeader", false));
     auto& graph = graphs.emplace_back();
-    for (const auto& wgg : range.generate(num_points, logx))
-      graph.addPoint(wgg, partons_flux->flux({wgg}));
+    for (const auto& wgg : x_range.generate(num_points, logx)) {
+      const auto flux_wgg = partons_flux->flux(wgg);
+      CG_DEBUG("main") << "Flux at w=" << wgg << ": " << flux_wgg << ".";
+      graph.addPoint(wgg, flux_wgg);
+    }
     graph.setTitle(modelling);
     graph.xAxis().setLabel("$w_{\\gamma\\gamma}$ (GeV)");
     graph.yAxis().setLabel("$S_{\\gamma\\gamma}$ (GeV${}^{-1}$)");
+    if (y_range.valid())
+      graph.yAxis().setRange(y_range);
   }
 
   if (!plotter.empty()) {
