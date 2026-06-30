@@ -5,6 +5,8 @@
 #include "CepGenEPA/MatrixElements.h"
 #include "CepGenEPA/TwoPartonFlux.h"
 #include "CepGenEPA/TwoPartonFluxFactory.h"
+#include "CepGenEPA/TwoPartonProcess.h"
+#include "CepGenEPA/TwoPartonProcessFactory.h"
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(sqme_sm, sm_aaaa::sqme, 2, 3)
 BOOST_PYTHON_FUNCTION_OVERLOADS(sqme_eft, eft_aaaa::sqme, 2, 5)
@@ -57,7 +59,44 @@ BOOST_PYTHON_MODULE(libCepGenEPA) {
                  return cepgen::TwoPartonFluxFactory::get().build(cepgen::ParametersList{}.setName(name)).release();
                },
                py::return_value_policy<py::manage_new_object>()))
+      /*.def("__getitem__",
+           py::make_function(
+               +[](const std::string& name) {
+                 return cepgen::TwoPartonFluxFactory::get().build(cepgen::ParametersList{}.setName(name)).release();
+               },
+               py::return_value_policy<py::manage_new_object>()))*/
       .add_static_property(
           "modules",
           +[]() { return cepgen::epa::python::to_python_list(cepgen::TwoPartonFluxFactory::get().modules()); });
+
+  struct TwoPartonProcessWrap : cepgen::epa::TwoPartonProcess, py::wrapper<cepgen::epa::TwoPartonProcess> {
+    std::string processDescription() const override {
+      if (const py::override ov = this->get_override("processDescription"); ov)
+        return ov();
+      return TwoPartonProcess::processDescription();
+    }
+    double matrixElement(double w) const override {
+      if (const py::override ov = this->get_override("matrixElement"); ov)
+        return ov(w);
+      return TwoPartonProcess::matrixElement(w);
+    }
+  };
+
+  py::class_<TwoPartonProcessWrap, boost::noncopyable>(
+      "_TwoPartonProcess", "A modelling for the two-parton level process", py::no_init)
+      .def("__call__",
+           &cepgen::epa::TwoPartonProcess::matrixElement,
+           "Compute the collinear matrix element for this central mass");
+
+  py::class_<cepgen::TwoPartonProcessFactory, boost::noncopyable>(
+      "TwoPartonProcess", "Two-parton process modelling retrieval tool", py::no_init)
+      .def("build",
+           py::make_function(
+               +[](const std::string& name) {
+                 return cepgen::TwoPartonProcessFactory::get().build(cepgen::ParametersList{}.setName(name)).release();
+               },
+               py::return_value_policy<py::manage_new_object>()))
+      .add_static_property(
+          "modules",
+          +[]() { return cepgen::epa::python::to_python_list(cepgen::TwoPartonProcessFactory::get().modules()); });
 }
